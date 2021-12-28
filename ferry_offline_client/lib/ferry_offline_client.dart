@@ -1,11 +1,11 @@
 import 'dart:async';
-import 'package:meta/meta.dart';
-import 'package:ferry_exec/ferry_exec.dart';
+import 'dart:core';
+import 'package:ferry/typed_links.dart';
+import 'package:ferry_offline_client/src/offline_mutation_typed_link.dart'
+    as offline;
 import 'package:gql/ast.dart';
 import 'package:built_value/serializer.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:hive/hive.dart';
-import 'package:ferry/typed_links.dart';
 export 'package:ferry_cache/ferry_cache.dart';
 export 'package:gql_link/gql_link.dart';
 export 'package:normalize/policies.dart';
@@ -13,8 +13,6 @@ export 'package:ferry/src/update_cache_typed_link.dart' show UpdateCacheHandler;
 export 'package:ferry_exec/ferry_exec.dart';
 export 'package:gql/ast.dart' show OperationType;
 import 'package:ferry_hive_store/ferry_hive_store.dart';
-
-import './src/offline_mutation_typed_link.dart';
 
 class OfflineClientConfig {
   /// A callback used to customize behavior when a mutation execution results in a [LinkException].
@@ -36,54 +34,53 @@ class OfflineClientConfig {
   final bool Function(OperationResponse) shouldDequeueRequest;
 
   const OfflineClientConfig({
-    this.linkExceptionHandler,
-    this.retriesExhaustedHandler,
-    this.shouldDequeueRequest,
+    required this.linkExceptionHandler,
+    required this.retriesExhaustedHandler,
+    required this.shouldDequeueRequest,
     this.dequeueOnError = true,
     this.persistOptimisticResponse = false,
   });
-
 }
 
 class OfflineClient extends TypedLink {
-  final Link link;
+  final Link? link;
   final StreamController<OperationRequest> requestController;
   final Map<String, TypePolicy> typePolicies;
   final Map<String, Function> updateCacheHandlers;
   final Map<OperationType, FetchPolicy> defaultFetchPolicies;
   final bool addTypename;
-  final Box storeBox;
-  final Box mutationQueueBox;
+  final Box? storeBox;
+  final Box? mutationQueueBox;
   final Cache cache;
-  final OfflineClientConfig offlineConfig;
-  final Serializers serializers;
+  final OfflineClientConfig? offlineConfig;
+  final Serializers? serializers;
 
-  TypedLink _typedLink;
+  TypedLink? _typedLink;
 
   OfflineClient({
-    @required this.link,
-    @required this.storeBox,
-    @required this.mutationQueueBox,
-    @required this.serializers,
+    this.link,
+    this.storeBox,
+    this.mutationQueueBox,
+    this.serializers,
     this.offlineConfig,
-    StreamController<OperationRequest> requestController,
+    StreamController<OperationRequest>? requestController,
     this.typePolicies = const {},
     this.updateCacheHandlers = const {},
     this.defaultFetchPolicies = const {},
     this.addTypename = true,
   })  : cache = Cache(
-          store: HiveStore(storeBox),
+          store: HiveStore(storeBox!),
           typePolicies: typePolicies,
           addTypename: addTypename,
         ),
         requestController = requestController ?? StreamController.broadcast() {
     _typedLink = TypedLink.from([
       RequestControllerTypedLink(this.requestController),
-      OfflineMutationTypedLink(
+      offline.OfflineMutationTypedLink(
         cache: cache,
-        mutationQueueBox: mutationQueueBox,
-        serializers: serializers,
-        requestController: requestController,
+        mutationQueueBox: mutationQueueBox as Box<Map<String, dynamic>>,
+        serializers: serializers!,
+        requestController: requestController!,
         config: offlineConfig,
       ),
       if (addTypename) AddTypenameTypedLink(),
@@ -93,7 +90,7 @@ class OfflineClient extends TypedLink {
           updateCacheHandlers: updateCacheHandlers,
         ),
       FetchPolicyTypedLink(
-        link: link,
+        link: link!,
         cache: cache,
         defaultFetchPolicies: defaultFetchPolicies,
       )
@@ -105,14 +102,14 @@ class OfflineClient extends TypedLink {
     OperationRequest<TData, TVars> request, [
     forward,
   ]) =>
-      _typedLink.request(request, forward);
+      _typedLink!.request(request, forward);
 
   /// Initializes an [OfflineClient] with default hive boxes
   static Future<OfflineClient> init({
-    @required Link link,
-    @required Serializers serializers,
-    OfflineClientConfig offlineConfig,
-    StreamController<OperationRequest> requestController,
+    required Link link,
+    required Serializers serializers,
+    OfflineClientConfig? offlineConfig,
+    StreamController<OperationRequest>? requestController,
     Map<String, TypePolicy> typePolicies = const {},
     Map<String, Function> updateCacheHandlers = const {},
     Map<OperationType, FetchPolicy> defaultFetchPolicies = const {},

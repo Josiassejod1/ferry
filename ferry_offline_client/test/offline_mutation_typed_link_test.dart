@@ -8,7 +8,8 @@ import 'package:ferry_exec/ferry_exec.dart';
 import 'package:async/async.dart';
 
 import 'package:ferry_offline_client/ferry_offline_client.dart';
-import 'package:ferry_offline_client/src/offline_mutation_typed_link.dart';
+import 'package:ferry_offline_client/src/offline_mutation_typed_link.dart'
+    as off;
 
 import 'package:ferry_test_graphql/schema/serializers.gql.dart';
 import 'package:ferry_test_graphql/mutations/variables/create_review.req.gql.dart';
@@ -119,7 +120,7 @@ class MockClient extends OfflineClient {
                 : req.requestId == request.requestId,
           )
           .switchMap(
-            (req) => forward(request),
+            (req) => forward!(request),
           )
           .doOnListen(
         () {
@@ -154,64 +155,63 @@ class MockClient extends OfflineClient {
 void main() {
   Hive.init('./test/__hive_data__');
 
-  MockClient client;
-  Box<Map<String, dynamic>> box;
-  OfflineMutationTypedLink offlineLink;
+  MockClient? client;
+  Box<Map<String, dynamic>>? box;
+  OfflineMutationTypedLink? offlineLink;
 
   setUp(() async {
     box = await Hive.openBox<Map<String, dynamic>>('mutation_queue');
-    await box.clear();
+    await box!.clear();
 
     final requestController = StreamController<OperationRequest>.broadcast();
     final cache = Cache();
 
     offlineLink = OfflineMutationTypedLink(
-      mutationQueueBox: box,
+      mutationQueueBox: box!,
       serializers: serializers,
       cache: cache,
       requestController: requestController,
     );
 
-    client = MockClient(requestController, offlineLink);
-    offlineLink.client = client;
+    client = MockClient(requestController, offlineLink!);
   });
 
   test('mutations get enqueued and dequeued', () async {
     // online, initial request is executed
-    offlineLink.connected = true;
+    offlineLink!.connected = true;
 
-    final queue = StreamQueue(client.request(req1));
+    final queue = StreamQueue(client!.request(req1));
 
-    expect((await queue.next).data, equals(data[req1.requestId].data));
+    expect((await queue.next).data, equals(data[req1.requestId]!.data));
 
     // client goes offline, subsequent request is queued
-    offlineLink.connected = false;
-    client.requestController.add(req1);
+    offlineLink!.connected = false;
+    client!.requestController.add(req1);
     queue.hasNext;
     await Future.delayed(Duration.zero);
 
-    expect(box.keys.length, equals(1));
+    expect(box!.keys.length, equals(1));
 
     // client comes back online, queued request is executed
-    offlineLink.connected = true;
+    offlineLink!.connected = true;
 
-    expect((await queue.next).data, equals(data[req1.requestId].data));
+    expect((await queue.next).data, equals(data[req1.requestId]!.data));
 
-    expect(box.keys.length, equals(0));
+    expect(box!.keys.length, equals(0));
   });
 
   test('ensure mutations are completed sequentially', () async {
-    offlineLink.connected = false;
-    expect(box.keys.length, 0);
-    client.request(req1).first;
-    client.request(req2).first;
-    client.request(req3).first;
-    client.request(req4).first;
-    await client.requestController.stream.take(4).toList();
-    expect(box.keys.length, 4);
-    offlineLink.connected = true;
+    offlineLink!.connected = false;
+    expect(box!.keys.length, 0);
+    client!.request(req1).first;
+    client!.request(req2).first;
+    client!.request(req3).first;
+    client!.request(req4).first;
+    await client!.requestController.stream.take(4).toList();
+    expect(box!.keys.length, 4);
+    offlineLink!.connected = true;
     await expectLater(
-      client.requestController.stream,
+      client!.requestController.stream,
       emitsInOrder([
         isA<GCreateReviewReq>().having(
           (req) => req.requestId,

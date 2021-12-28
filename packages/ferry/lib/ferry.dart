@@ -38,19 +38,10 @@ class Client extends TypedLink {
     this.updateCacheHandlers = const {},
     this.defaultFetchPolicies = const {},
     this.addTypename = true,
-<<<<<<< HEAD:ferry/lib/ferry.dart
-  })  : cache = cache ??
-            Cache(
-              typePolicies: typePolicies,
-              addTypename: addTypename,
-            ),
-        requestController = requestController ?? StreamController.broadcast() {
-=======
   }) {
     this.cache = cache ??= _defaultCache = Cache();
     this.requestController = requestController ??=
         _defaultRequestController = StreamController.broadcast();
->>>>>>> master:packages/ferry/lib/ferry.dart
     _typedLink = TypedLink.from([
       ErrorTypedLink(),
       RequestControllerTypedLink(this.requestController),
