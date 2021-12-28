@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
-import './graphql/pokemon_card_fragment.data.gql.dart';
+import './graphql/__generated__/pokemon_card_fragment.data.gql.dart';
 
 class PokemonCard extends StatelessWidget {
   final GPokemonCard pokemon;
 
-  const PokemonCard({this.pokemon});
+  const PokemonCard({required this.pokemon});
 
   @override
   Widget build(BuildContext context) {
@@ -18,13 +18,22 @@ class PokemonCard extends StatelessWidget {
           child: Column(
             children: <Widget>[
               SizedBox(
-                child: Ink.image(image: NetworkImage(pokemon.image)),
+                child: Ink.image(image: NetworkImage(pokemon.avatar)),
                 height: 200,
                 width: 200,
               ),
-              Text(pokemon.name, style: Theme.of(context).textTheme.title),
-              Text('HP: ${pokemon.maxHP}',
-                  style: Theme.of(context).textTheme.subhead)
+              Text(
+                pokemon.name,
+                style: Theme.of(context).textTheme.headline6,
+              ),
+              Text(
+                'height: ${pokemon.height?.in_meter ?? 0}',
+                style: Theme.of(context).textTheme.subtitle1,
+              ),
+              Text(
+                'weight: ${pokemon.weight?.in_kg ?? 0}',
+                style: Theme.of(context).textTheme.subtitle1,
+              )
             ],
           ),
         ),

@@ -1,0 +1,23 @@
+query HeroWithFragments($episode: Episode) {
+  hero(episode: $episode) {
+    ...comparisonFields
+  }
+}
+
+fragment heroData on Character {
+  id
+  name
+}
+
+fragment comparisonFields on Character {
+  id
+  ...heroData
+  friendsConnection(first: $first) {
+    totalCount
+    edges {
+      node {
+        ...heroData
+      }
+    }
+  }
+}

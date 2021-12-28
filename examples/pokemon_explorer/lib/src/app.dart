@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import './all_pokemon.dart';
+import 'pokemon_list.dart';
 import './pokemon_detail.dart';
 
 class App extends StatelessWidget {
@@ -11,11 +11,11 @@ class App extends StatelessWidget {
       onGenerateRoute: (settings) {
         switch (settings.name) {
           case '/':
-            return MaterialPageRoute(builder: (_) => AllPokemonScreen());
+            return MaterialPageRoute(builder: (_) => PokemonListScreen());
           case 'detail':
             return MaterialPageRoute(
                 builder: (_) => PokemonDetailScreen(
-                    id: (settings.arguments as Map<String, String>)["id"]));
+                    id: (settings.arguments as Map)["id"]!));
           default:
             return MaterialPageRoute(builder: (_) => Scaffold());
         }
